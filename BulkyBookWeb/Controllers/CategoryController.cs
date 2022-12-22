@@ -42,12 +42,12 @@ namespace BulkyBookWeb.Controllers
             if (id == null || id == 0) {
                 return NotFound();
             }
-            var categoryFromDb = _db.Categories.Find(id);
+            var categoryFromDbFirst = _db.Categories.FirstOrDefault(u=>u.Name=="id");
 
-            if (categoryFromDb == null) {
+            if (categoryFromDbFirst == null) {
                 return NotFound();
             }
-            return View(categoryFromDb);
+            return View(categoryFromDbFirst);
         }
         // POST
         [HttpPost]
