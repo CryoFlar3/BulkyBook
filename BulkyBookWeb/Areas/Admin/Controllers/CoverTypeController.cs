@@ -27,13 +27,10 @@ public class CoverTypeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(CoverType obj) {
-        //if (obj.Name == obj.DisplayOrder.ToString()) {
-        //    ModelState.AddModelError("CustomError", "The DisplayOrder cannot be the same as the Name");
-        //}
         if (ModelState.IsValid) {
             _unitOfWork.CoverType.Add(obj);
             _unitOfWork.Save();
-            TempData["success"] = "Category created successfully";
+            TempData["success"] = "CoverType created successfully";
             return RedirectToAction("Index");
         }
         return View(obj);
@@ -55,13 +52,10 @@ public class CoverTypeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Edit(CoverType obj) {
-        //if (obj.Name == obj.DisplayOrder.ToString()) {
-        //    ModelState.AddModelError("CustomError", "The DisplayOrder cannot be the same as the Name");
-        //}
         if (ModelState.IsValid) {
             _unitOfWork.CoverType.Update(obj);
             _unitOfWork.Save();
-            TempData["success"] = "Category updated successfully";
+            TempData["success"] = "CoverType updated successfully";
             return RedirectToAction("Index");
         }
         return View(obj);
@@ -89,7 +83,7 @@ public class CoverTypeController : Controller
         }
         _unitOfWork.CoverType.Remove(obj);
         _unitOfWork.Save();
-        TempData["success"] = "Category deleted successfully";
+        TempData["success"] = "CoverType deleted successfully";
         return RedirectToAction("Index");
     }
 }
