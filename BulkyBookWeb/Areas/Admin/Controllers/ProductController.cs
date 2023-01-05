@@ -50,6 +50,7 @@ public class ProductController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Upsert(ProductVM obj, IFormFile? file) {
+
         if (ModelState.IsValid) {
             string wwwRootPath = _hostEnvironment.WebRootPath;
             if (file != null) {
@@ -68,14 +69,13 @@ public class ProductController : Controller
                     file.CopyTo(fileStreams);
                 }
                 obj.Product.ImageUrl = @"\images\products\" + fileName + extension;
+
             }
             if (obj.Product.Id == 0) {
                 _unitOfWork.Product.Add(obj.Product);
             } else {
                 _unitOfWork.Product.Update(obj.Product);
-
             }
-
             _unitOfWork.Save();
             TempData["success"] = "Product created successfully";
             return RedirectToAction("Index");
@@ -83,7 +83,8 @@ public class ProductController : Controller
         return View(obj);
     }
 
-    
+
+
     #region API CALLS
     [HttpGet]
     public IActionResult GetAll(int id) {
