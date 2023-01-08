@@ -20,9 +20,12 @@ public class HomeController : Controller
         return View(productsList);
     }
 
-    public IActionResult Detail() {
-        Product products = _unitOfWork.Product.GetAll(includeProperties: "Category,CoverType");
-        return View(products);
+    public IActionResult Details(int id) {
+        ShoppingCart cartObj = new() {
+            Count= 1,
+            Product = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id, includeProperties: "Category,CoverType"),
+        }; 
+        return View(cartObj);
     }
 
     public IActionResult Privacy() {
