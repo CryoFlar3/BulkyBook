@@ -163,7 +163,9 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 user.PhoneNumber= Input.PhoneNumber;
                 user.Name= Input.Name;
                 user.State= Input.State;
-
+                if (Input.Role == SD.Role_User_Comp) {
+                    user.CompanyId= Input.CompanyId;
+                }
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
