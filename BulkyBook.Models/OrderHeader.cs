@@ -41,6 +41,6 @@ namespace BulkyBook.Models
 		[Required]
 		public string PostalCode { get; set; }
 		[Required]
-		public string PhoneHumber { get; set; }
+		public string PhoneNumber { get; set; }
 	}
 }
