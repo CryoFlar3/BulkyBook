@@ -21,7 +21,7 @@ namespace BulkyBook.DataAccess.Repository
         }
 
 		public void UpdateStatus(int id, string orderStatus, string? paymentStatus = null) {
-			var orderFromDb = _db.OrderHeaders.FirstOrDefault(x => x.Id == id);
+			var orderFromDb = _db.OrderHeaders.FirstOrDefault(u => u.Id == id);
             if (orderFromDb != null) {
                 orderFromDb.OrderStatus = orderStatus;
                 if(paymentStatus != null) {
