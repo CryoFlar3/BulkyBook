@@ -40,7 +40,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 StripeConfiguration.ApiKey= builder.Configuration.GetSection("Stripe:SecreteKey").Get<string>();
-app.UseAuthentication();;
+app.UseAuthentication();
 
 app.UseAuthorization();
 app.MapRazorPages();
