@@ -96,38 +96,41 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
             }
 
             // Stripe settings
-       //     var options = new SessionCreateOptions {
-       //         LineItems = new List<SessionLineItemOptions>
-       //{
-       //   new SessionLineItemOptions
-       //   {
-       //     PriceData = new SessionLineItemPriceDataOptions
-       //     {
-       //       UnitAmount = 2000,
-       //       Currency = "usd",
-       //       ProductData = new SessionLineItemPriceDataProductDataOptions
-       //       {
-       //         Name = "T-shirt",
-       //       },
-       //     },
-       //     Quantity = 1,
-       //   },
-       // },
-       //         Mode = "payment",
-       //         SuccessUrl = "http://localhost:4242/success",
-       //         CancelUrl = "http://localhost:4242/cancel",
-       //     };
+            var domain = "https://localhost:7126/";
+            var options = new SessionCreateOptions {
+                LineItems = new List<SessionLineItemOptions>(),
 
-       //     var service = new SessionService();
-       //     Session session = service.Create(options);
+                Mode = "payment",
+                SuccessUrl = domain+$"customer/cart/OrderConfirmation?id={ShoppingCartVM.OrderHeader.Id}",
+                CancelUrl = domain + $"customer/cart/Index",
+            };
 
-       //     Response.Headers.Add("Location", session.Url);
-       //     return new StatusCodeResult(303);
+            foreach (var item in ShoppingCartVM.ListCart) {
 
-            _unitOfWork.ShoppingCart.RemoveRange(ShoppingCartVM.ListCart);
-            _unitOfWork.Save();
+                var sessionLinItem = new SessionLineItemOptions {
+                    PriceData = new SessionLineItemPriceDataOptions {
+                        UnitAmount = (long)(item.Price*100),
+                        Currency = "usd",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions {
+                            Name = item.Product.Title,
+                        },
+                    },
+                    Quantity = item.Count,
+                };
+                options.LineItems.Add(sessionLinItem);
+                
+            }
 
-            return RedirectToAction("Index", "Home");
+            var service = new SessionService();
+            Session session = service.Create(options);
+
+            Response.Headers.Add("Location", session.Url);
+            return new StatusCodeResult(303);
+
+            //_unitOfWork.ShoppingCart.RemoveRange(ShoppingCartVM.ListCart);
+            //_unitOfWork.Save();
+
+            //return RedirectToAction("Index", "Home");
         }
 
         public IActionResult Plus(int cartId) {
