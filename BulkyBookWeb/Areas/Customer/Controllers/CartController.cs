@@ -4,6 +4,7 @@ using BulkyBook.Models.ViewModels;
 using BulkyBook.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Stripe.Checkout;
 using System.Security.Claims;
 
@@ -98,11 +99,14 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
             // Stripe settings
             var domain = "https://localhost:7126/";
             var options = new SessionCreateOptions {
+                PaymentMethodTypes = new List<string>
+                {
+                  "card",
+                },
                 LineItems = new List<SessionLineItemOptions>(),
-
                 Mode = "payment",
                 SuccessUrl = domain+$"customer/cart/OrderConfirmation?id={ShoppingCartVM.OrderHeader.Id}",
-                CancelUrl = domain + $"customer/cart/Index",
+                CancelUrl = domain+$"customer/cart/Index",
             };
 
             foreach (var item in ShoppingCartVM.ListCart) {
@@ -135,9 +139,19 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
         }
 
         public IActionResult OrderConfirmation(int id) {
-            OrderHeader orderHeader=_unitOfWork.OrderHeader.GetFirstOrDefault(x => x.Id == id);
-
+            OrderHeader orderHeader=_unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == id);
+            var service = new SessionService();
+            Session session = service.Get(orderHeader.SessionId);
             // Check the Stripe status
+            if (session.PaymentStatus.ToLower() == "paid") {
+                _unitOfWork.OrderHeader.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
+                _unitOfWork.Save();
+            }
+            List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == orderHeader.ApplicationUserId).ToList();
+            _unitOfWork.ShoppingCart.RemoveRange(shoppingCarts);
+            _unitOfWork.Save();
+
+            return View(id);
         }
 
         public IActionResult Plus(int cartId) {

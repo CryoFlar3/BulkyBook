@@ -39,7 +39,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-StripeConfiguration.ApiKey= builder.Configuration.GetSection("Stripe:SecreteKey").Get<string>();
+
+
+StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
+
 app.UseAuthentication();
 
 app.UseAuthorization();
