@@ -5,6 +5,7 @@ using BulkyBook.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
+using Stripe.Checkout;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -32,6 +33,70 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
             };
 
             return View(OrderVM);
+        }
+
+        [ActionName("Details")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Details_PAY_NOW() {
+            OrderVM.OrderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == OrderVM.OrderHeader.Id, includeProperties: "ApplicationUser");
+            OrderVM.OrderDetail = _unitOfWork.OrderDetail.GetAll(u => u.Id == OrderVM.OrderHeader.Id, includeProperties: "Product");
+            // Stripe settings
+            var domain = "https://localhost:7126/";
+            var options = new SessionCreateOptions {
+                PaymentMethodTypes = new List<string>
+                {
+                  "card",
+                },
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+                SuccessUrl = domain + $"admin/order/PaymentConfirmation?orderHeaderid={OrderVM.OrderHeader.Id}",
+                CancelUrl = domain + $"admin/order/details?orderId={OrderVM.OrderHeader.Id}",
+            };
+
+            foreach (var item in OrderVM.OrderDetail) {
+
+                var sessionLinItem = new SessionLineItemOptions {
+                    PriceData = new SessionLineItemPriceDataOptions {
+                        UnitAmount = (long)(item.Price * 100),
+                        Currency = "usd",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions {
+                            Name = item.Product.Title,
+                        },
+                    },
+                    Quantity = item.Count,
+                };
+                options.LineItems.Add(sessionLinItem);
+
+            }
+
+            var service = new SessionService();
+            Session session = service.Create(options);
+            _unitOfWork.OrderHeader.UpdateStripePaymentId(OrderVM.OrderHeader.Id, session.Id, session.PaymentIntentId);
+            _unitOfWork.Save();
+            Response.Headers.Add("Location", session.Url);
+            return new StatusCodeResult(303);
+
+            return View(OrderVM);
+        }
+
+        public IActionResult OrderConfirmation(int id) {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.GetFirstOrDefault(u => u.Id == id);
+            if (orderHeader.PaymentStatus != SD.PaymentStatusDelayedPayment) {
+                var service = new SessionService();
+                Session session = service.Get(orderHeader.SessionId);
+                // Check the Stripe status
+                if (session.PaymentStatus.ToLower() == "paid") {
+                    _unitOfWork.OrderHeader.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
+                    _unitOfWork.Save();
+                }
+            }
+
+            List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == orderHeader.ApplicationUserId).ToList();
+            _unitOfWork.ShoppingCart.RemoveRange(shoppingCarts);
+            _unitOfWork.Save();
+
+            return View(id);
         }
 
         [HttpPost]
